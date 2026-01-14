@@ -1,14 +1,14 @@
 /* Aegis.net Dashboard — Global Styles */
 
 :root {
-    --color-bg: #0a0a0f;
-    --color-bg-elevated: #12121a;
-    --color-bg-card: #16161f;
-    --color-border: #2a2a3a;
-    --color-text: #f4f4f5;
-    --color-text-muted: #a1a1aa;
-    --color-primary: #6366f1;
-    --color-success: #22c55e;
+    --color-bg: #ffffff;
+    --color-bg-elevated: #f4f4f5;
+    --color-bg-card: #ffffff;
+    --color-border: #e4e4e7;
+    --color-text: #18181b;
+    --color-text-muted: #71717a;
+    --color-primary: #000000;
+    --color-success: #10b981;
     --color-warning: #f59e0b;
     --color-danger: #ef4444;
 }

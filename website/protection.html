@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protection Mode | Aegis.net</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body { background: #0b0b10; overflow: hidden; }
+        /* Override particle color for this page to be red/alert */
+        #particles { opacity: 0.3; }
+    </style>
+</head>
+<body class="protection-body">
+    <!-- Particles (Reusing same script) -->
+    <canvas id="particles"></canvas>
+
+    <div class="protection-card">
+        <div class="shield-icon-lg">🛡️</div>
+        
+        <h1 class="protection-title">Сайт под защитой</h1>
+        <p class="protection-desc">
+            Мы зафиксировали аномальную активность с вашего адреса или сети. 
+            Доступ временно ограничен системой защиты Aegis.net.
+        </p>
+
+        <div class="ray-id">Ray ID: 8a7b3c9d1e2f • IP: <script>document.write('Your IP')</script></div>
+
+        <button class="btn btn-outline" onclick="location.reload()">Проверить снова</button>
+
+        <div class="protection-footer">
+            <span>Performance & Security by</span>
+            <strong>Aegis.net</strong>
+        </div>
+    </div>
+
+    <!-- Reusing main script for particles, but we might want to override configs -->
+    <script src="script.js"></script>
+    <script>
+        // Override particle colors to red alert theme
+        /* 
+        alert-red: #ea4335
+        dark-red: #c5221f
+        orange: #fbbc05 
+        */
+       // Note: Since script.js runs on DOMContentLoaded, we try to intercept or just let it be.
+       // Ideally we would pass config to it, but for now we just let the blue particles run
+       // or we could replace the canvas context drawing style.
+    </script>
+</body>
+</html>

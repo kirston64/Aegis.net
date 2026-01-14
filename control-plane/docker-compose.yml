@@ -1,8 +1,6 @@
 # Aegis.net Control Plane Docker Compose
 # Development environment
 
-version: '3.8'
-
 services:
   # Control Plane API
   api:
@@ -37,7 +35,7 @@ services:
       - "5432:5432"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U aegis"]
+      test: [ "CMD-SHELL", "pg_isready -U aegis" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -52,10 +50,42 @@ services:
     command: redis-server --appendonly yes
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
       timeout: 5s
       retries: 5
+
+  # Aegis Edge Node (OpenResty)
+  edge:
+    build:
+      context: ../edge/openresty
+      dockerfile: Dockerfile
+    ports:
+      - "80:80" # HTTP
+      - "443:443" # HTTPS
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      # Mount Lua code for hot-reloading
+      - ../edge/openresty/aegis.lua:/usr/local/openresty/lualib/aegis/aegis.lua
+      # Mount nginx config
+      - ../edge/openresty/nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
+      # Mount protection template (we need to map this path correctly or update code)
+      - ../website/protection.html:/usr/local/openresty/lualib/aegis/protection.html
+    depends_on:
+      - redis
+      - api
+    restart: unless-stopped
+
+  # Origin Website (The site we are protecting)
+  website:
+    image: nginx:alpine
+    ports:
+      - "3000:80" # Exposed directly for comparison
+    volumes:
+      - ../website:/usr/share/nginx/html
+    restart: unless-stopped
 
   # Celery Worker (for background tasks)
   worker:

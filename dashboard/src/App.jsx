@@ -1,91 +1,205 @@
 import { Routes, Route, Link, useLocation } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, createContext, useContext } from 'react'
 import {
     Shield,
     Globe,
     BarChart3,
     Settings,
-    AlertTriangle,
-    Plus,
+    Activity,
     ArrowUp,
     ArrowDown,
-    Activity
+    Menu,
+    X,
+    Check
 } from 'lucide-react'
 import {
-    LineChart,
-    Line,
+    AreaChart,
+    Area,
     XAxis,
     YAxis,
     CartesianGrid,
     Tooltip,
-    ResponsiveContainer,
-    AreaChart,
-    Area
+    ResponsiveContainer
 } from 'recharts'
 
-// Mock data for demo
-const mockTrafficData = Array.from({ length: 24 }, (_, i) => ({
-    time: `${i}:00`,
-    legitimate: Math.floor(10000 + Math.random() * 5000),
-    blocked: Math.floor(500 + Math.random() * 2000),
-    challenged: Math.floor(200 + Math.random() * 800),
-}))
+// --- i18n System ---
+const translations = {
+    en: {
+        dashboard: "Dashboard",
+        domains: "Domains",
+        smartShield: "Smart Shield",
+        logs: "Logs",
+        settings: "Settings",
+        main: "Main",
+        system: "System",
+        totalRequests: "Total Requests",
+        blockedRequests: "Blocked Requests",
+        currentRps: "Current RPS",
+        protectedDomains: "Protected Domains",
+        realTimeTraffic: "Real-time Traffic",
+        underAttack: "UNDER ATTACK",
+        systemHealthy: "SYSTEM HEALTHY",
+        addDomain: "Add Domain",
+        protectionLevel: "Protection Level",
+        levelDescriptions: "Level Descriptions",
+        increase: "Increase",
+        decrease: "Decrease",
+        reqPerSec: "req/s",
+        legitimate: "Legitimate",
+        blocked: "Blocked",
+        status: "Status",
+        actions: "Actions",
+        configure: "Configure",
+        welcome: "Welcome to Aegis",
+        selectLanguage: "Select your language",
+        continue: "Continue"
+    },
+    ru: {
+        dashboard: "Дашборд",
+        domains: "Домены",
+        smartShield: "Умная Защита",
+        logs: "Логи",
+        settings: "Настройки",
+        main: "Главная",
+        system: "Система",
+        totalRequests: "Всего запросов",
+        blockedRequests: "Заблокировано",
+        currentRps: "Текущий RPS",
+        protectedDomains: "Доменов под защитой",
+        realTimeTraffic: "Трафик в реальном времени",
+        underAttack: "АТАКА ОБНАРУЖЕНА",
+        systemHealthy: "СИСТЕМА В НОРМЕ",
+        addDomain: "Добавить домен",
+        protectionLevel: "Уровень защиты",
+        levelDescriptions: "Описание уровней",
+        increase: "Повысить",
+        decrease: "Понизить",
+        reqPerSec: "зап/сек",
+        legitimate: "Легитимный",
+        blocked: "Заблокирован",
+        status: "Статус",
+        actions: "Действия",
+        configure: "Настроить",
+        welcome: "Добро пожаловать в Aegis",
+        selectLanguage: "Выберите язык",
+        continue: "Продолжить"
+    }
+}
 
-const mockDomains = [
-    { id: '1', domain: 'game-server.ru', status: 'active', level: 1, rps: 1250 },
-    { id: '2', domain: 'minecraft.example.com', status: 'active', level: 0, rps: 450 },
-    { id: '3', domain: 'api.myapp.io', status: 'warning', level: 2, rps: 3200 },
-]
+const LanguageContext = createContext()
 
-// Sidebar Component
+function LanguageProvider({ children }) {
+    const [language, setLanguage] = useState(null) // null initiates selection screen
+
+    const t = (key) => translations[language]?.[key] || key
+
+    return (
+        <LanguageContext.Provider value={{ language, setLanguage, t }}>
+            {children}
+        </LanguageContext.Provider>
+    )
+}
+
+const useTranslation = () => useContext(LanguageContext)
+
+// --- Components ---
+
+function LanguageSelector() {
+    const { setLanguage } = useTranslation()
+
+    return (
+        <div style={{
+            position: 'fixed',
+            inset: 0,
+            background: '#ffffff',
+            zIndex: 9999,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '2rem'
+        }}>
+            <div style={{ maxWidth: '400px', width: '100%', textAlign: 'center' }}>
+                <div style={{ fontSize: '4rem', marginBottom: '2rem' }}>🛡️</div>
+                <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem', color: '#18181b' }}>
+                    Aegis.net
+                </h1>
+                <p style={{ color: '#71717a', marginBottom: '3rem' }}>
+                    Advanced DDoS Protection
+                </p>
+
+                <div style={{ display: 'grid', gap: '1rem' }}>
+                    <button
+                        onClick={() => setLanguage('en')}
+                        className="btn btn-outline"
+                        style={{ justifyContent: 'space-between', padding: '1.5rem', fontSize: '1.1rem' }}
+                    >
+                        <span>English</span>
+                        <span style={{ opacity: 0.5 }}>EN</span>
+                    </button>
+                    <button
+                        onClick={() => setLanguage('ru')}
+                        className="btn btn-outline"
+                        style={{ justifyContent: 'space-between', padding: '1.5rem', fontSize: '1.1rem' }}
+                    >
+                        <span>Русский</span>
+                        <span style={{ opacity: 0.5 }}>RU</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
 function Sidebar() {
     const location = useLocation()
+    const { t } = useTranslation()
     const isActive = (path) => location.pathname === path ? 'nav-link active' : 'nav-link'
 
     return (
         <aside className="sidebar">
             <div className="logo">
                 <span className="logo-icon">🛡️</span>
-                <span>Aegis<span className="logo-accent">.net</span></span>
+                <span>Aegis</span>
             </div>
 
             <nav className="nav-section">
-                <h3 className="nav-title">Main</h3>
+                <h3 className="nav-title">{t('main')}</h3>
                 <ul className="nav-links">
                     <li>
                         <Link to="/" className={isActive('/')}>
-                            <BarChart3 size={18} />
-                            <span>Dashboard</span>
+                            <BarChart3 size={20} strokeWidth={1.5} />
+                            <span>{t('dashboard')}</span>
                         </Link>
                     </li>
                     <li>
                         <Link to="/domains" className={isActive('/domains')}>
-                            <Globe size={18} />
-                            <span>Domains</span>
+                            <Globe size={20} strokeWidth={1.5} />
+                            <span>{t('domains')}</span>
                         </Link>
                     </li>
                     <li>
                         <Link to="/attack-mode" className={isActive('/attack-mode')}>
-                            <Shield size={18} />
-                            <span>Smart Shield</span>
+                            <Shield size={20} strokeWidth={1.5} />
+                            <span>{t('smartShield')}</span>
                         </Link>
                     </li>
                 </ul>
             </nav>
 
             <nav className="nav-section">
-                <h3 className="nav-title">System</h3>
+                <h3 className="nav-title">{t('system')}</h3>
                 <ul className="nav-links">
                     <li>
                         <Link to="/logs" className={isActive('/logs')}>
-                            <Activity size={18} />
-                            <span>Logs</span>
+                            <Activity size={20} strokeWidth={1.5} />
+                            <span>{t('logs')}</span>
                         </Link>
                     </li>
                     <li>
                         <Link to="/settings" className={isActive('/settings')}>
-                            <Settings size={18} />
-                            <span>Settings</span>
+                            <Settings size={20} strokeWidth={1.5} />
+                            <span>{t('settings')}</span>
                         </Link>
                     </li>
                 </ul>
@@ -94,142 +208,155 @@ function Sidebar() {
     )
 }
 
-// Dashboard Page
 function DashboardPage() {
+    const { t } = useTranslation()
     const [stats, setStats] = useState({
-        totalRequests: '1.2M',
-        blockedRequests: '45.2K',
+        totalRequests: 0,
+        blockedRequests: 0,
+        rps: 0,
         activeAttacks: 0,
-        protectedDomains: 3,
+        protectedDomains: 1,
     })
+
+    const [trafficData, setTrafficData] = useState(
+        Array.from({ length: 60 }, (_, i) => ({ time: i, rps: 0, blocked: 0 }))
+    )
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await fetch('http://localhost:8080/api/stats')
+                const data = await response.json()
+
+                setStats({
+                    totalRequests: data.total.toLocaleString(),
+                    blockedRequests: data.blocked.toLocaleString(),
+                    rps: data.rps,
+                    activeAttacks: data.blocked > 0 ? 1 : 0,
+                    protectedDomains: 1
+                })
+
+                setTrafficData(prev => {
+                    const newData = [...prev.slice(1), {
+                        time: new Date().toLocaleTimeString(),
+                        rps: data.rps,
+                        blocked: data.blocked > 0 ? data.rps : 0
+                    }]
+                    return newData
+                })
+
+            } catch (error) {
+                // Silent fail for demo
+            }
+        }
+
+        const interval = setInterval(fetchData, 1000)
+        return () => clearInterval(interval)
+    }, [])
 
     return (
         <div>
             <div className="page-header">
-                <h1 className="page-title">Dashboard</h1>
-                <button className="btn btn-primary">
-                    <Plus size={16} />
-                    Add Domain
-                </button>
+                <h1 className="page-title">{t('dashboard')}</h1>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span className={`status-dot ${stats.activeAttacks > 0 ? 'warning' : 'active'}`}></span>
+                    <span style={{
+                        color: stats.activeAttacks > 0 ? 'var(--color-warning)' : 'var(--color-success)',
+                        fontWeight: 500,
+                        fontSize: '0.875rem'
+                    }}>
+                        {stats.activeAttacks > 0 ? t('underAttack') : t('systemHealthy')}
+                    </span>
+                </div>
             </div>
 
             <div className="stats-grid">
                 <div className="stat-card">
-                    <div className="stat-label">Total Requests (24h)</div>
+                    <div className="stat-label">{t('totalRequests')}</div>
                     <div className="stat-value">{stats.totalRequests}</div>
                 </div>
                 <div className="stat-card">
-                    <div className="stat-label">Blocked Requests</div>
+                    <div className="stat-label">{t('blockedRequests')}</div>
                     <div className="stat-value warning">{stats.blockedRequests}</div>
                 </div>
                 <div className="stat-card">
-                    <div className="stat-label">Active Attacks</div>
-                    <div className="stat-value success">{stats.activeAttacks}</div>
+                    <div className="stat-label">{t('currentRps')}</div>
+                    <div className="stat-value">{stats.rps}</div>
                 </div>
                 <div className="stat-card">
-                    <div className="stat-label">Protected Domains</div>
+                    <div className="stat-label">{t('protectedDomains')}</div>
                     <div className="stat-value">{stats.protectedDomains}</div>
                 </div>
             </div>
 
             <div className="card">
                 <div className="card-header">
-                    <h2 className="card-title">Traffic Overview</h2>
+                    <h2 className="card-title">{t('realTimeTraffic')}</h2>
                 </div>
                 <div className="chart-container">
                     <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={mockTrafficData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3a" />
-                            <XAxis dataKey="time" stroke="#71717a" />
-                            <YAxis stroke="#71717a" />
+                        <AreaChart data={trafficData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
+                            <XAxis dataKey="time" hide />
+                            <YAxis
+                                stroke="var(--color-text-muted)"
+                                fontSize={12}
+                                tickLine={false}
+                                axisLine={false}
+                            />
                             <Tooltip
                                 contentStyle={{
-                                    background: '#16161f',
-                                    border: '1px solid #2a2a3a',
-                                    borderRadius: '8px'
+                                    background: 'var(--color-bg)',
+                                    border: '1px solid var(--color-border)',
+                                    borderRadius: '8px',
+                                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                                 }}
                             />
                             <Area
                                 type="monotone"
-                                dataKey="legitimate"
+                                dataKey="rps"
                                 stackId="1"
-                                stroke="#22c55e"
-                                fill="#22c55e"
-                                fillOpacity={0.3}
-                                name="Legitimate"
-                            />
-                            <Area
-                                type="monotone"
-                                dataKey="challenged"
-                                stackId="1"
-                                stroke="#f59e0b"
-                                fill="#f59e0b"
-                                fillOpacity={0.3}
-                                name="Challenged"
+                                stroke="var(--color-primary)"
+                                fill="var(--color-primary)"
+                                fillOpacity={0.1}
+                                strokeWidth={2}
+                                name={t('legitimate')}
+                                isAnimationActive={false}
                             />
                             <Area
                                 type="monotone"
                                 dataKey="blocked"
-                                stackId="1"
-                                stroke="#ef4444"
-                                fill="#ef4444"
-                                fillOpacity={0.3}
-                                name="Blocked"
+                                stackId="2"
+                                stroke="var(--color-danger)"
+                                fill="var(--color-danger)"
+                                fillOpacity={0.1}
+                                strokeWidth={2}
+                                name={t('blocked')}
+                                isAnimationActive={false}
                             />
                         </AreaChart>
                     </ResponsiveContainer>
                 </div>
             </div>
-
-            <div className="card">
-                <div className="card-header">
-                    <h2 className="card-title">Protected Domains</h2>
-                </div>
-                <ul className="domain-list">
-                    {mockDomains.map(d => (
-                        <li key={d.id} className="domain-item">
-                            <div>
-                                <div className="domain-name">{d.domain}</div>
-                                <div className="domain-status">
-                                    <span className={`status-dot ${d.status}`}></span>
-                                    <span>{d.rps.toLocaleString()} req/s</span>
-                                </div>
-                            </div>
-                            <div>
-                                <span style={{
-                                    padding: '0.25rem 0.75rem',
-                                    background: 'rgba(99, 102, 241, 0.1)',
-                                    borderRadius: '9999px',
-                                    fontSize: '0.75rem',
-                                    fontWeight: 600,
-                                    color: '#6366f1'
-                                }}>
-                                    Level {d.level}
-                                </span>
-                            </div>
-                        </li>
-                    ))}
-                </ul>
-            </div>
         </div>
     )
 }
 
-// Attack Mode Page
 function AttackModePage() {
+    const { t } = useTranslation()
     const [level, setLevel] = useState(1)
     const levels = ['Observe', 'Soft', 'Medium', 'Hard', 'Lockdown']
-    const levelColors = ['#22c55e', '#0ea5e9', '#f59e0b', '#f97316', '#ef4444']
+    const levelColors = ['var(--color-success)', '#0ea5e9', 'var(--color-warning)', '#f97316', 'var(--color-danger)']
 
     return (
         <div>
             <div className="page-header">
-                <h1 className="page-title">Smart Shield Control</h1>
+                <h1 className="page-title">{t('smartShield')}</h1>
             </div>
 
             <div className="card">
                 <div className="card-header">
-                    <h2 className="card-title">🛡️ Current Protection Level</h2>
+                    <h2 className="card-title">{t('protectionLevel')}</h2>
                     <span style={{ color: levelColors[level], fontWeight: 600 }}>
                         {levels[level]}
                     </span>
@@ -239,179 +366,61 @@ function AttackModePage() {
                     <div className="level-bar">
                         <div
                             className="level-fill"
-                            style={{ width: `${(level + 1) * 20}%` }}
+                            style={{
+                                width: `${(level + 1) * 20}%`,
+                                background: levelColors[level]
+                            }}
                         ></div>
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-                    {levels.map((name, i) => (
-                        <button
-                            key={i}
-                            onClick={() => setLevel(i)}
-                            style={{
-                                padding: '0.5rem 1rem',
-                                background: level === i ? levelColors[i] : 'transparent',
-                                border: `1px solid ${level === i ? levelColors[i] : '#2a2a3a'}`,
-                                borderRadius: '0.5rem',
-                                color: level === i ? 'white' : '#a1a1aa',
-                                cursor: 'pointer',
-                                fontWeight: 500,
-                                fontSize: '0.875rem',
-                            }}
-                        >
-                            {name}
-                        </button>
-                    ))}
-                </div>
-
-                <div style={{ display: 'flex', gap: '1rem' }}>
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
                     <button
                         className="btn btn-outline"
                         onClick={() => setLevel(Math.max(0, level - 1))}
                     >
                         <ArrowDown size={16} />
-                        Decrease
+                        {t('decrease')}
                     </button>
                     <button
-                        className="btn btn-danger"
+                        className="btn btn-primary"
                         onClick={() => setLevel(Math.min(4, level + 1))}
+                        style={{ background: level === 4 ? 'var(--color-danger)' : 'var(--color-primary)' }}
                     >
                         <ArrowUp size={16} />
-                        Increase
+                        {t('increase')}
                     </button>
                 </div>
             </div>
-
-            <div className="card">
-                <div className="card-header">
-                    <h2 className="card-title">Level Descriptions</h2>
-                </div>
-                <table className="table">
-                    <thead>
-                        <tr>
-                            <th>Level</th>
-                            <th>Action</th>
-                            <th>Use Case</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><span style={{ color: '#22c55e' }}>0 — Observe</span></td>
-                            <td>Logging only, no blocking</td>
-                            <td>Normal traffic, ML training</td>
-                        </tr>
-                        <tr>
-                            <td><span style={{ color: '#0ea5e9' }}>1 — Soft</span></td>
-                            <td>Invisible PoW challenge</td>
-                            <td>Slight traffic increase</td>
-                        </tr>
-                        <tr>
-                            <td><span style={{ color: '#f59e0b' }}>2 — Medium</span></td>
-                            <td>CAPTCHA for suspicious IPs</td>
-                            <td>Moderate attack</td>
-                        </tr>
-                        <tr>
-                            <td><span style={{ color: '#f97316' }}>3 — Hard</span></td>
-                            <td>JS Challenge for everyone</td>
-                            <td>Active DDoS attack</td>
-                        </tr>
-                        <tr>
-                            <td><span style={{ color: '#ef4444' }}>4 — Lockdown</span></td>
-                            <td>Whitelist only</td>
-                            <td>Emergency, severe attack</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
         </div>
     )
 }
 
-// Domains Page
 function DomainsPage() {
+    const { t } = useTranslation()
     return (
         <div>
             <div className="page-header">
-                <h1 className="page-title">Domains</h1>
+                <h1 className="page-title">{t('domains')}</h1>
                 <button className="btn btn-primary">
                     <Plus size={16} />
-                    Add Domain
+                    {t('addDomain')}
                 </button>
             </div>
-
             <div className="card">
-                <table className="table">
-                    <thead>
-                        <tr>
-                            <th>Domain</th>
-                            <th>Status</th>
-                            <th>Protection Level</th>
-                            <th>Traffic (req/s)</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {mockDomains.map(d => (
-                            <tr key={d.id}>
-                                <td><strong>{d.domain}</strong></td>
-                                <td>
-                                    <span className="domain-status">
-                                        <span className={`status-dot ${d.status}`}></span>
-                                        {d.status}
-                                    </span>
-                                </td>
-                                <td>Level {d.level}</td>
-                                <td>{d.rps.toLocaleString()}</td>
-                                <td>
-                                    <button className="btn btn-outline" style={{ padding: '0.375rem 0.75rem', fontSize: '0.75rem' }}>
-                                        Configure
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                <p style={{ color: 'var(--color-text-muted)' }}>Demo Only</p>
             </div>
         </div>
     )
 }
 
-// Settings Page
-function SettingsPage() {
-    return (
-        <div>
-            <div className="page-header">
-                <h1 className="page-title">Settings</h1>
-            </div>
-            <div className="card">
-                <h2 className="card-title">API Configuration</h2>
-                <p style={{ color: '#a1a1aa', marginTop: '1rem' }}>
-                    Configure your API keys and webhook endpoints here.
-                </p>
-            </div>
-        </div>
-    )
-}
+function MainLayout() {
+    const { language } = useTranslation()
 
-// Logs Page
-function LogsPage() {
-    return (
-        <div>
-            <div className="page-header">
-                <h1 className="page-title">Access Logs</h1>
-            </div>
-            <div className="card">
-                <p style={{ color: '#a1a1aa' }}>
-                    Real-time access logs will appear here. Connect to the Control Plane API to view live data.
-                </p>
-            </div>
-        </div>
-    )
-}
+    if (!language) {
+        return <LanguageSelector />
+    }
 
-// Main App
-function App() {
     return (
         <>
             <Sidebar />
@@ -420,12 +429,23 @@ function App() {
                     <Route path="/" element={<DashboardPage />} />
                     <Route path="/domains" element={<DomainsPage />} />
                     <Route path="/attack-mode" element={<AttackModePage />} />
-                    <Route path="/settings" element={<SettingsPage />} />
-                    <Route path="/logs" element={<LogsPage />} />
+                    <Route path="*" element={<DashboardPage />} />
                 </Routes>
             </main>
         </>
     )
+}
+
+function App() {
+    return (
+        <LanguageProvider>
+            <MainLayout />
+        </LanguageProvider>
+    )
+}
+
+function Plus({ size }) {
+    return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
 }
 
 export default App

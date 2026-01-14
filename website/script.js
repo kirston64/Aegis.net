@@ -1,32 +1,158 @@
-// Aegis.net — Particles Animation (Google Antigravity Style)
+// Aegis.net — Particles Animation & Logic
+
+// ========================
+// Global Auth Functions
+// ========================
+window.openModal = function (mode) {
+    const modal = document.getElementById('authModal');
+    const title = document.getElementById('modalTitle');
+    const subtitle = document.getElementById('modalSubtitle');
+    const footerText = document.getElementById('modalFooterText');
+    const formBtn = document.querySelector('.modal-content .btn-primary');
+
+    if (!modal) return;
+
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden'; // Prevent scrolling
+
+    // Reset button state
+    if (formBtn) {
+        formBtn.disabled = false;
+        formBtn.style.opacity = '1';
+        formBtn.style.cursor = 'pointer';
+    }
+
+    if (mode === 'register') {
+        title.textContent = 'Создание аккаунта';
+        subtitle.textContent = 'Начните использовать защиту бесплатно';
+        if (formBtn) formBtn.textContent = 'Создать аккаунт';
+        footerText.innerHTML = 'Уже есть аккаунт? <a href="#" onclick="switchModalMode(event)">Войти</a>';
+    } else {
+        title.textContent = 'Вход в систему';
+        subtitle.textContent = 'Управляйте защитой своих проектов';
+        if (formBtn) formBtn.textContent = 'Войти';
+        footerText.innerHTML = 'Нет аккаунта? <a href="#" onclick="switchModalMode(event)">Регистрация</a>';
+    }
+};
+
+window.closeModal = function () {
+    const modal = document.getElementById('authModal');
+    if (modal) modal.classList.remove('active');
+    document.body.style.overflow = '';
+};
+
+window.switchModalMode = function (e) {
+    if (e) e.preventDefault();
+    const title = document.getElementById('modalTitle');
+    title.textContent.includes('Вход') ? openModal('register') : openModal('login');
+};
+
+window.handleLogin = function (e) {
+    e.preventDefault();
+    const form = e.target;
+    const btn = form.querySelector('button[type="submit"]') || form.querySelector('.btn-primary');
+
+    if (btn) {
+        const originalText = btn.textContent;
+        btn.textContent = 'Загрузка...';
+        btn.disabled = true;
+        btn.style.opacity = '0.7';
+        btn.style.cursor = 'not-allowed';
+    }
+
+    // Simulate API call
+    setTimeout(() => {
+        alert('Успешный вход! Переход в панель управления...');
+        // In a real app, verify credentials here
+        // window.location.href = '/dashboard'; 
+
+        if (btn) {
+            btn.textContent = 'Успешно!';
+            setTimeout(() => {
+                closeModal();
+                // Reset for next time
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+            }, 1000);
+        }
+    }, 1500);
+};
 
 document.addEventListener('DOMContentLoaded', function () {
     // ========================
-    // Particles Animation
+    // Particles Configuration
     // ========================
     const canvas = document.getElementById('particles');
-    const ctx = canvas.getContext('2d');
+    if (!canvas) return; // Guard clause
 
+    const ctx = canvas.getContext('2d');
     let particles = [];
     const particleCount = 80;
 
-    // Particle colors (blue and red accents like in Antigravity)
     const colors = [
         '#4285f4', // Google Blue
         '#4285f4',
-        '#4285f4',
-        '#1a73e8', // Darker blue
-        '#ea4335', // Google Red (less frequent)
-        '#5f6368', // Gray
+        '#1a73e8',
+        '#ea4335', // Red
+        '#5f6368'  // Gray
     ];
 
     function resizeCanvas() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
     }
-
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
+
+    // ========================
+    // Event Listeners
+    // ========================
+    // Close on backdrop click
+    const modal = document.getElementById('authModal');
+    if (modal) {
+        modal.addEventListener('click', e => {
+            if (e.target.id === 'authModal') closeModal();
+        });
+    }
+
+    // Attach form handler (fallback if inline fails)
+    const form = document.querySelector('.modal-content form');
+    if (form) {
+        form.onsubmit = window.handleLogin;
+    }
+
+    // ========================
+    // Scroll Animations
+    // ========================
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, observerOptions);
+
+    // Observe elements
+    document.querySelectorAll('.feature-card, .game-card, .pricing-card, .hero-content').forEach(el => {
+        el.classList.add('animate-on-scroll');
+        observer.observe(el);
+    });
+
+    // ========================
+    // Interactive Particles
+    // ========================
+    let mouse = { x: null, y: null, radius: 120 };
+
+    window.addEventListener('mousemove', function (e) {
+        mouse.x = e.x;
+        mouse.y = e.y;
+    });
 
     // Particle class
     class Particle {
@@ -38,33 +164,62 @@ document.addEventListener('DOMContentLoaded', function () {
             this.x = Math.random() * canvas.width;
             this.y = Math.random() * canvas.height;
             this.size = Math.random() * 3 + 1;
+            this.baseX = this.x;
+            this.baseY = this.y;
+            this.density = (Math.random() * 30) + 1;
             this.speedX = (Math.random() - 0.5) * 0.5;
             this.speedY = (Math.random() - 0.5) * 0.5;
             this.color = colors[Math.floor(Math.random() * colors.length)];
             this.opacity = Math.random() * 0.5 + 0.3;
-            this.rotation = Math.random() * 360;
-            this.rotationSpeed = (Math.random() - 0.5) * 2;
-
-            // Shape: 0 = circle, 1 = line, 2 = dot cluster
+            // Removed rotation for simplicity in interaction
             this.shape = Math.floor(Math.random() * 3);
         }
 
         update() {
-            this.x += this.speedX;
-            this.y += this.speedY;
-            this.rotation += this.rotationSpeed;
+            // Mouse interaction
+            let dx = mouse.x - this.x;
+            let dy = mouse.y - this.y;
+            let distance = Math.sqrt(dx * dx + dy * dy);
+            let forceDirectionX = dx / distance;
+            let forceDirectionY = dy / distance;
+            let maxDistance = mouse.radius;
+            let force = (maxDistance - distance) / maxDistance;
+            let directionX = forceDirectionX * force * this.density;
+            let directionY = forceDirectionY * force * this.density;
+
+            if (distance < mouse.radius) {
+                this.x -= directionX;
+                this.y -= directionY;
+            } else {
+                // Return to normal movement
+                if (this.x !== this.baseX) {
+                    let dx = this.x - this.baseX;
+                    this.x -= dx / 50;
+                }
+                if (this.y !== this.baseY) {
+                    let dy = this.y - this.baseY;
+                    this.y -= dy / 50;
+                }
+
+                // Drift
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                // Update base position for drift
+                this.baseX += this.speedX;
+                this.baseY += this.speedY;
+            }
 
             // Wrap around screen
-            if (this.x < -20) this.x = canvas.width + 20;
-            if (this.x > canvas.width + 20) this.x = -20;
-            if (this.y < -20) this.y = canvas.height + 20;
-            if (this.y > canvas.height + 20) this.y = -20;
+            if (this.baseX < -20) { this.x = canvas.width + 20; this.baseX = this.x; }
+            if (this.baseX > canvas.width + 20) { this.x = -20; this.baseX = this.x; }
+            if (this.baseY < -20) { this.y = canvas.height + 20; this.baseY = this.y; }
+            if (this.baseY > canvas.height + 20) { this.y = -20; this.baseY = this.y; }
         }
 
         draw() {
             ctx.save();
             ctx.translate(this.x, this.y);
-            ctx.rotate((this.rotation * Math.PI) / 180);
             ctx.globalAlpha = this.opacity;
             ctx.fillStyle = this.color;
             ctx.strokeStyle = this.color;
@@ -75,25 +230,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     ctx.arc(0, 0, this.size, 0, Math.PI * 2);
                     ctx.fill();
                     break;
-
                 case 1: // Line/dash
-                    ctx.lineWidth = 1.5;
+                case 2: // Simplified to dot for performance
                     ctx.beginPath();
-                    ctx.moveTo(-this.size * 2, 0);
-                    ctx.lineTo(this.size * 2, 0);
-                    ctx.stroke();
-                    break;
-
-                case 2: // Dot cluster (like confetti)
-                    ctx.beginPath();
-                    ctx.arc(0, 0, this.size * 0.7, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.arc(this.size * 1.5, this.size, this.size * 0.5, 0, Math.PI * 2);
+                    ctx.arc(0, 0, this.size, 0, Math.PI * 2);
                     ctx.fill();
                     break;
             }
-
             ctx.restore();
         }
     }
@@ -120,60 +263,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     initParticles();
     animate();
-
-    // ========================
-    // Navigation
-    // ========================
-    const navbar = document.querySelector('.navbar');
-
-    window.addEventListener('scroll', function () {
-        if (window.scrollY > 50) {
-            navbar.style.borderBottom = '1px solid #e8eaed';
-        } else {
-            navbar.style.borderBottom = 'none';
-        }
-    });
-
-    // ========================
-    // Smooth scroll
-    // ========================
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
-        });
-    });
-
-    // ========================
-    // Scroll animations
-    // ========================
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
-            }
-        });
-    }, observerOptions);
-
-    // Observe elements
-    document.querySelectorAll('.feature-card, .game-card, .pricing-card').forEach(el => {
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(20px)';
-        el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-        observer.observe(el);
-    });
 
     console.log('🛡️ Aegis.net loaded');
 });

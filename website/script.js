@@ -1,6 +1,49 @@
 // Aegis.net — Particles Animation & Logic
 
 // ========================
+// Theme Toggle
+// ========================
+function initTheme() {
+    const savedTheme = localStorage.getItem('aegis-theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        document.body.classList.add('dark-theme');
+    }
+}
+
+window.toggleTheme = function () {
+    document.body.classList.toggle('dark-theme');
+    const isDark = document.body.classList.contains('dark-theme');
+    localStorage.setItem('aegis-theme', isDark ? 'dark' : 'light');
+
+    // Update particles color scheme
+    updateParticleColors();
+};
+
+// ========================
+// Mobile Menu Toggle
+// ========================
+window.toggleMobileMenu = function () {
+    const navLinks = document.querySelector('.nav-links');
+    const mobileToggle = document.querySelector('.mobile-menu-toggle');
+
+    if (navLinks) {
+        navLinks.classList.toggle('active');
+    }
+    if (mobileToggle) {
+        mobileToggle.classList.toggle('active');
+    }
+
+    // Prevent body scroll when menu is open
+    if (navLinks && navLinks.classList.contains('active')) {
+        document.body.style.overflow = 'hidden';
+    } else {
+        document.body.style.overflow = '';
+    }
+};
+
+// ========================
 // Global Auth Functions
 // ========================
 window.openModal = function (mode) {
@@ -47,10 +90,55 @@ window.switchModalMode = function (e) {
     title.textContent.includes('Вход') ? openModal('register') : openModal('login');
 };
 
+// Enhanced form validation
+function validateEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function showFieldError(input, message) {
+    input.style.borderColor = '#ea4335';
+    let error = input.parentElement.querySelector('.error-message');
+    if (!error) {
+        error = document.createElement('span');
+        error.className = 'error-message';
+        error.style.color = '#ea4335';
+        error.style.fontSize = '0.75rem';
+        error.style.marginTop = '0.25rem';
+        error.style.display = 'block';
+        input.parentElement.appendChild(error);
+    }
+    error.textContent = message;
+}
+
+function clearFieldError(input) {
+    input.style.borderColor = '';
+    const error = input.parentElement.querySelector('.error-message');
+    if (error) error.remove();
+}
+
 window.handleLogin = function (e) {
     e.preventDefault();
     const form = e.target;
+    const emailInput = form.querySelector('input[type="email"]');
+    const passwordInput = form.querySelector('input[type="password"]');
     const btn = form.querySelector('button[type="submit"]') || form.querySelector('.btn-primary');
+
+    // Clear previous errors
+    clearFieldError(emailInput);
+    clearFieldError(passwordInput);
+
+    // Validate
+    let hasError = false;
+    if (!validateEmail(emailInput.value)) {
+        showFieldError(emailInput, 'Введите корректный email');
+        hasError = true;
+    }
+    if (passwordInput.value.length < 6) {
+        showFieldError(passwordInput, 'Пароль должен содержать минимум 6 символов');
+        hasError = true;
+    }
+
+    if (hasError) return;
 
     if (btn) {
         const originalText = btn.textContent;
@@ -62,24 +150,20 @@ window.handleLogin = function (e) {
 
     // Simulate API call
     setTimeout(() => {
-        alert('Успешный вход! Переход в панель управления...');
         // In a real app, verify credentials here
-        // window.location.href = '/dashboard'; 
+        // For demo, redirect to dashboard
+        window.location.href = 'dashboard.html';
 
         if (btn) {
             btn.textContent = 'Успешно!';
-            setTimeout(() => {
-                closeModal();
-                // Reset for next time
-                btn.disabled = false;
-                btn.style.opacity = '1';
-                btn.style.cursor = 'pointer';
-            }, 1000);
         }
     }, 1500);
 };
 
 document.addEventListener('DOMContentLoaded', function () {
+    // Initialize theme
+    initTheme();
+
     // ========================
     // Particles Configuration
     // ========================
@@ -90,13 +174,36 @@ document.addEventListener('DOMContentLoaded', function () {
     let particles = [];
     const particleCount = 80;
 
-    const colors = [
+    let colors = [
         '#4285f4', // Google Blue
         '#4285f4',
         '#1a73e8',
         '#ea4335', // Red
         '#5f6368'  // Gray
     ];
+
+    // Update colors based on theme
+    window.updateParticleColors = function () {
+        const isDark = document.body.classList.contains('dark-theme');
+        colors = isDark ? [
+            '#4c9aff',
+            '#6bb0ff',
+            '#4c9aff',
+            '#ff6b6b',
+            '#a0a0a0'
+        ] : [
+            '#4285f4',
+            '#4285f4',
+            '#1a73e8',
+            '#ea4335',
+            '#5f6368'
+        ];
+
+        // Update existing particles
+        particles.forEach(p => {
+            p.color = colors[Math.floor(Math.random() * colors.length)];
+        });
+    };
 
     function resizeCanvas() {
         canvas.width = window.innerWidth;

@@ -35,6 +35,26 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     ALGORITHM: str = "HS256"
     
+    # CLI Security
+    CLI_SESSION_TIMEOUT: int = 1800  # 30 minutes
+    JWT_SECRET: str = "change-this-to-random-secret-in-production"  # For CLI session tokens
+    
+    # Authorized SSH public keys for CLI access
+    AUTHORIZED_CLI_KEYS: List[str] = [
+        # Add your SSH public keys here
+        # Example: "ssh-ed25519 AAAAC3... user@host"
+    ]
+    
+    # IP whitelist for CLI access (empty list = allow all)
+    WHITELISTED_IPS: List[str] = [
+        "127.0.0.1",
+        "::1",
+        # Add your trusted IPs here
+    ]
+    
+    # Audit logging
+    AUDIT_LOG_RETENTION_DAYS: int = 90
+    
     # Rate limiting
     RATE_LIMIT_PER_MINUTE: int = 100
     

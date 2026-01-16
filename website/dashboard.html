@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Aegis.net Dashboard — Управление DDoS защитой">
+    <title>Dashboard — Aegis.net</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dashboard.css">
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar dashboard-nav">
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
+                <span class="logo-text">AEGIS.NET</span>
+            </a>
+            <div class="nav-actions">
+                <button class="theme-toggle" onclick="toggleTheme()" aria-label="Переключить тему">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+                <div class="user-menu">
+                    <button class="btn btn-ghost btn-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <circle cx="12" cy="10" r="3"></circle>
+                            <path d="M6.168 18.849A4 4 0 0 1 10 16h4a4 4 0 0 1 3.834 2.855"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <a href="#overview" class="sidebar-link active" data-section="overview">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    <span>Обзор</span>
+                </a>
+                <a href="#domains" class="sidebar-link" data-section="domains">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="2" y1="12" x2="22" y2="12"></line>
+                        <path
+                            d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+                        </path>
+                    </svg>
+                    <span>Домены</span>
+                </a>
+                <a href="#analytics" class="sidebar-link" data-section="analytics">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="20" x2="12" y2="10"></line>
+                        <line x1="18" y1="20" x2="18" y2="4"></line>
+                        <line x1="6" y1="20" x2="6" y2="16"></line>
+                    </svg>
+                    <span>Аналитика</span>
+                </a>
+                <a href="#settings" class="sidebar-link" data-section="settings">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M12 1v6m0 6v6m5.2-13.2L13.6 8.4m-3.2 3.2L6.8 15.2m0-10.4L10.4 8.4m3.2 3.2l3.6 3.6">
+                        </path>
+                    </svg>
+                    <span>Настройки</span>
+                </a>
+                <a href="#billing" class="sidebar-link" data-section="billing">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                        <line x1="2" y1="10" x2="22" y2="10"></line>
+                    </svg>
+                    <span>Биллинг</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            <!-- Overview Section -->
+            <section id="overview-section" class="dashboard-section active">
+                <div class="section-header">
+                    <h1>Обзор</h1>
+                    <p>Общая статистика защиты ваших доменов</p>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(26, 115, 232, 0.1); color: #1a73e8;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                                </path>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <p class="stat-label">Всего запросов</p>
+                            <h2 class="stat-value" id="total-requests">1,245,892</h2>
+                            <span class="stat-change positive">+12.5%</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(234, 67, 53, 0.1); color: #ea4335;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="15" y1="9" x2="9" y2="15"></line>
+                                <line x1="9" y1="9" x2="15" y2="15"></line>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <p class="stat-label">Заблокировано</p>
+                            <h2 class="stat-value" id="blocked-requests">8,432</h2>
+                            <span class="stat-change negative">-3.2%</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(52, 168, 83, 0.1); color: #34a853;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <p class="stat-label">Uptime</p>
+                            <h2 class="stat-value">99.99%</h2>
+                            <span class="stat-change positive">100% SLA</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(251, 188, 5, 0.1); color: #fbbc05;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <p class="stat-label">Средний пинг</p>
+                            <h2 class="stat-value">0.8ms</h2>
+                            <span class="stat-change positive">Отлично</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart -->
+                <div class="chart-card">
+                    <div class="card-header">
+                        <h3>Трафик за последние 7 дней</h3>
+                        <div class="chart-legend">
+                            <span class="legend-item">
+                                <span class="legend-dot" style="background: #1a73e8;"></span>
+                                Всего
+                            </span>
+                            <span class="legend-item">
+                                <span class="legend-dot" style="background: #ea4335;"></span>
+                                Заблокировано
+                            </span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="trafficChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Domains Section -->
+            <section id="domains-section" class="dashboard-section">
+                <div class="section-header">
+                    <h1>Управление доменами</h1>
+                    <button class="btn btn-primary" onclick="showAddDomainModal()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Добавить домен
+                    </button>
+                </div>
+
+                <div class="domains-table-card">
+                    <table class="domains-table">
+                        <thead>
+                            <tr>
+                                <th>Домен</th>
+                                <th>Статус</th>
+                                <th>Защита</th>
+                                <th>Запросы (24ч)</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="domains-list">
+                            <tr>
+                                <td>
+                                    <div class="domain-info">
+                                        <span class="domain-name">example.com</span>
+                                    </div>
+                                </td>
+                                <td><span class="status-badge status-active">Активен</span></td>
+                                <td><span class="protection-level level-medium">Средняя</span></td>
+                                <td>45,231</td>
+                                <td>
+                                    <button class="btn-icon" title="Настройки">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                            <path d="M12 1v6m0 6v6"></path>
+                                        </svg>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="domain-info">
+                                        <span class="domain-name">game-server.net</span>
+                                    </div>
+                                </td>
+                                <td><span class="status-badge status-active">Активен</span></td>
+                                <td><span class="protection-level level-high">Высокая</span></td>
+                                <td>128,445</td>
+                                <td>
+                                    <button class="btn-icon" title="Настройки">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                            <path d="M12 1v6m0 6v6"></path>
+                                        </svg>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Analytics Section -->
+            <section id="analytics-section" class="dashboard-section">
+                <div class="section-header">
+                    <h1>Аналитика</h1>
+                    <p>Подробная статистика трафика и атак</p>
+                </div>
+                <div class="coming-soon">
+                    <h2>📊 Скоро появится</h2>
+                    <p>Раздел с детальной аналитикой находится в разработке</p>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings-section" class="dashboard-section">
+                <div class="section-header">
+                    <h1>Настройки</h1>
+                    <p>Управление аккаунтом и API ключами</p>
+                </div>
+                <div class="settings-grid">
+                    <div class="settings-card">
+                        <h3>API Ключ</h3>
+                        <div class="api-key-display">
+                            <code id="api-key">ak_live_xxxxxxxxxxxxxxxxxxxxxxxx</code>
+                            <button class="btn btn-ghost btn-sm" onclick="copyApiKey()">Копировать</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Billing Section -->
+            <section id="billing-section" class="dashboard-section">
+                <div class="section-header">
+                    <h1>Биллинг</h1>
+                    <p>Информация о тарифе и платежах</p>
+                </div>
+
+                <div class="billing-card">
+                    <div class="current-plan">
+                        <div>
+                            <h3>Текущий тариф</h3>
+                            <p class="plan-name">Pro</p>
+                        </div>
+                        <div class="plan-price">
+                            <span class="price">€19</span>
+                            <span class="period">/мес</span>
+                        </div>
+                    </div>
+                    <div class="plan-features">
+                        <p>✓ 5 доменов</p>
+                        <p>✓ 50M запросов/мес</p>
+                        <p>✓ Live Chat 24/7</p>
+                    </div>
+                    <button class="btn btn-outline">Изменить тариф</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="dashboard.js"></script>
+</body>
+
+</html>

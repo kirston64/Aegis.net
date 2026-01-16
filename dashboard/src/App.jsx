@@ -21,6 +21,7 @@ import {
     Tooltip,
     ResponsiveContainer
 } from 'recharts'
+import AttackMap from './components/AttackMap'
 
 // --- i18n System ---
 const translations = {
@@ -216,6 +217,7 @@ function DashboardPage() {
         rps: 0,
         activeAttacks: 0,
         protectedDomains: 1,
+        recent_attacks: []
     })
 
     const [trafficData, setTrafficData] = useState(
@@ -233,14 +235,15 @@ function DashboardPage() {
                     blockedRequests: data.blocked.toLocaleString(),
                     rps: data.rps,
                     activeAttacks: data.blocked > 0 ? 1 : 0,
-                    protectedDomains: 1
+                    protectedDomains: 1,
+                    recent_attacks: data.recent_attacks || []
                 })
 
                 setTrafficData(prev => {
                     const newData = [...prev.slice(1), {
                         time: new Date().toLocaleTimeString(),
                         rps: data.rps,
-                        blocked: data.blocked > 0 ? data.rps : 0
+                        blocked: data.blocked_rps
                     }]
                     return newData
                 })
@@ -270,7 +273,30 @@ function DashboardPage() {
                 </div>
             </div>
 
-            <div className="stats-grid">
+            {/* Live Map Section */}
+            <div className="card mb-8 relative overflow-hidden" style={{ padding: '1.5rem' }}>
+                <div className="flex items-center justify-between mb-4" style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem" }}>
+                    <h3 className="text-lg font-semibold flex items-center gap-2" style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "1.125rem", fontWeight: 600 }}>
+                        <Globe size={20} className="text-blue-400" style={{ color: "#60a5fa" }} />
+                        Live Threat Intelligence
+                    </h3>
+                    <div className="flex gap-2 text-xs text-gray-400" style={{ display: "flex", gap: "0.5rem", fontSize: "0.75rem", color: "#9ca3af" }}>
+                        {stats.activeAttacks > 0 && (
+                            <span className="flex items-center gap-1" style={{ display: "flex", alignItems: "center", gap: "0.25rem", color: "#ef4444" }}>
+                                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#ef4444", display: "inline-block" }}></span>
+                                Active Attack
+                            </span>
+                        )}
+                    </div>
+                </div>
+
+                <div className="relative z-10">
+                    <AttackMap attacks={stats.recent_attacks || []} />
+                </div>
+            </div>
+
+            {/* Charts Section */}
+            <div className="stats-grid" style={{ marginBottom: "2rem" }}>
                 <div className="stat-card">
                     <div className="stat-label">{t('totalRequests')}</div>
                     <div className="stat-value">{stats.totalRequests}</div>
@@ -348,6 +374,33 @@ function AttackModePage() {
     const levels = ['Observe', 'Soft', 'Medium', 'Hard', 'Lockdown']
     const levelColors = ['var(--color-success)', '#0ea5e9', 'var(--color-warning)', '#f97316', 'var(--color-danger)']
 
+    useEffect(() => {
+        // Build resilient fetch with retries or just simple for now
+        fetch('http://localhost:8080/api/config')
+            .then(res => res.json())
+            .then(data => {
+                if (data.protection_level !== undefined) {
+                    setLevel(data.protection_level)
+                }
+            })
+            .catch(err => console.log("Config fetch failed", err))
+    }, [])
+
+    const handleLevelChange = async (newLevel) => {
+        try {
+            const res = await fetch('http://localhost:8080/api/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ protection_level: newLevel })
+            })
+            if (res.ok) {
+                setLevel(newLevel)
+            }
+        } catch (error) {
+            console.error("Failed to update level", error)
+        }
+    }
+
     return (
         <div>
             <div className="page-header">
@@ -377,15 +430,17 @@ function AttackModePage() {
                 <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
                     <button
                         className="btn btn-outline"
-                        onClick={() => setLevel(Math.max(0, level - 1))}
+                        onClick={() => handleLevelChange(Math.max(0, level - 1))}
+                        disabled={level === 0}
                     >
                         <ArrowDown size={16} />
                         {t('decrease')}
                     </button>
                     <button
                         className="btn btn-primary"
-                        onClick={() => setLevel(Math.min(4, level + 1))}
+                        onClick={() => handleLevelChange(Math.min(4, level + 1))}
                         style={{ background: level === 4 ? 'var(--color-danger)' : 'var(--color-primary)' }}
+                        disabled={level === 4}
                     >
                         <ArrowUp size={16} />
                         {t('increase')}

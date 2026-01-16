@@ -27,12 +27,13 @@ API will be available at: `http://localhost:8000`
 ### 3. Start the Dashboard
 
 ```bash
+```bash
 cd dashboard
 npm install
 npm run dev
 ```
 
-Dashboard will be available at: `http://localhost:3000`
+Dashboard will be available at: `http://localhost:5173`
 
 ---
 

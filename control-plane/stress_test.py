@@ -144,6 +144,49 @@ def main():
         print("\n   Make sure 'start_demo.ps1' is running!")
         return
     
+    # Interactive Menu
+    print("\nSelect Mode:")
+    print("1. Standard Test (3 Waves)")
+    print("2. Continuous Traffic (For Dashboard Demo)")
+    
+    try:
+        choice = input("Enter choice [1]: ").strip()
+    except EOFError:
+        choice = "1"
+        
+    if choice == "2":
+        run_continuous_simulation(base_url)
+    else:
+        run_standard_test(base_url)
+
+def run_continuous_simulation(url):
+    print("\n[CONTINUOUS MODE] Press Ctrl+C to stop.")
+    print("Generating random background traffic...")
+    
+    try:
+        while True:
+            # 1. Background Noise (Legitimate)
+            wave_size = random.randint(10, 50)
+            print(f"   🌊 sending {wave_size} legitimate requests...")
+            run_attack_wave(url, wave_size, concurrent_threads=10)
+            time.sleep(1)
+            
+            # 2. Occasional Attack Spikes (10% chance)
+            if random.random() < 0.2:
+                attack_size = random.randint(200, 500)
+                print(f"   ⚠️  ATTACK SPIKE! ({attack_size} botnet requests)")
+                
+                def botnet_headers(i):
+                     spoofed_ip = f"{random.randint(1,255)}.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(0,255)}"
+                     return {"X-Forwarded-For": spoofed_ip, "User-Agent": f"BotnetNode/{i}"}
+
+                run_attack_wave(url, attack_size, concurrent_threads=50, headers_factory=botnet_headers)
+                time.sleep(2)
+                
+    except KeyboardInterrupt:
+        print("\n[STOPPED] Continuous simulation ended.")
+
+def run_standard_test(base_url):
     # Wave 1: Light load
     print("\n" + "="*60)
     print("[WAVE 1] Light load (50 requests)")

@@ -21,8 +21,7 @@
     <nav class="navbar">
         <div class="container nav-container">
             <a href="#" class="logo">
-                <span class="logo-icon">🛡️</span>
-                <span class="logo-text">Aegis.net</span>
+                <span class="logo-text">AEGIS.NET</span>
             </a>
             <ul class="nav-links">
                 <li><a href="#features">Продукт</a></li>
@@ -31,8 +30,27 @@
                 <li><a href="#">Документация</a></li>
             </ul>
             <div class="nav-actions">
+                <button class="theme-toggle" onclick="toggleTheme()" aria-label="Переключить тему">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
                 <button class="btn btn-ghost" onclick="openModal('login')">Вход</button>
                 <button class="btn btn-primary" onclick="openModal('register')">Регистрация</button>
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Открыть меню">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
             </div>
         </div>
     </nav>
@@ -41,8 +59,7 @@
     <section class="hero">
         <div class="container hero-content">
             <div class="hero-badge">
-                <span class="logo-icon-sm">🛡️</span>
-                <span>Aegis.net</span>
+                <span>AEGIS.NET</span>
             </div>
             <h1 class="hero-title">
                 Защита от DDoS<br>
@@ -54,9 +71,6 @@
             </p>
             <div class="hero-actions">
                 <button class="btn btn-dark" onclick="openModal('register')">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                        <path d="M0 2h6v6H0V2zm2 2v2h2V4H2zM8 2h6v6H8V2zm2 2v2h2V4h-2zM0 10h6v6H0v-6zm2 2v2h2v-2H2z" />
-                    </svg>
                     Начать бесплатно
                 </button>
                 <a href="#features" class="btn btn-ghost">Узнать больше</a>
@@ -71,8 +85,7 @@
 
             <div class="modal-header">
                 <div class="logo center-logo">
-                    <span class="logo-icon">🛡️</span>
-                    <span class="logo-text">Aegis.net</span>
+                    <span class="logo-text">AEGIS.NET</span>
                 </div>
                 <h2 id="modalTitle">Вход в систему</h2>
                 <p id="modalSubtitle">Управляйте защитой своих проектов</p>
@@ -137,37 +150,37 @@
 
             <div class="features-grid">
                 <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
+                    <div class="feature-icon-new" style="background: rgba(26, 115, 232, 0.1); color: #1a73e8;">L</div>
                     <h3>Минимальная задержка</h3>
                     <p>eBPF/XDP фильтрация на уровне ядра. Добавляем менее 1ms к вашему пингу.</p>
                 </div>
 
                 <div class="feature-card">
-                    <div class="feature-icon">🔍</div>
+                    <div class="feature-icon-new" style="background: rgba(52, 168, 83, 0.1); color: #34a853;">T</div>
                     <h3>Полная прозрачность</h3>
                     <p>Доступ ко всем логам без ограничений. Экспорт в ваше хранилище.</p>
                 </div>
 
                 <div class="feature-card">
-                    <div class="feature-icon">🎮</div>
+                    <div class="feature-icon-new" style="background: rgba(234, 67, 53, 0.1); color: #ea4335;">G</div>
                     <h3>Для геймеров</h3>
                     <p>Нативная поддержка GTA 5 RP, Minecraft, CS2. Понимаем игровые протоколы.</p>
                 </div>
 
                 <div class="feature-card">
-                    <div class="feature-icon">💬</div>
+                    <div class="feature-icon-new" style="background: rgba(251, 188, 5, 0.1); color: #fbbc05;">S</div>
                     <h3>Быстрая поддержка</h3>
                     <p>Live Chat 24/7. Среднее время ответа — 2 минуты. Telegram и Discord боты.</p>
                 </div>
 
                 <div class="feature-card">
-                    <div class="feature-icon">🛡️</div>
+                    <div class="feature-icon-new" style="background: rgba(26, 115, 232, 0.1); color: #1a73e8;">P</div>
                     <h3>Smart Shield AI</h3>
                     <p>5 уровней адаптивной защиты. Автоматическое определение и блокировка атак.</p>
                 </div>
 
                 <div class="feature-card">
-                    <div class="feature-icon">💰</div>
+                    <div class="feature-icon-new" style="background: rgba(52, 168, 83, 0.1); color: #34a853;">C</div>
                     <h3>Честные цены</h3>
                     <p>Фиксированная стоимость. Бесплатный тариф без ограничения по времени.</p>
                 </div>
@@ -185,25 +198,21 @@
 
             <div class="games-grid">
                 <div class="game-card">
-                    <div class="game-emoji">🚗</div>
                     <h3>GTA 5 RP</h3>
                     <p>RAGE MP / alt:V</p>
                 </div>
 
                 <div class="game-card">
-                    <div class="game-emoji">⛏️</div>
                     <h3>Minecraft</h3>
                     <p>Java / Bedrock</p>
                 </div>
 
                 <div class="game-card">
-                    <div class="game-emoji">🎯</div>
                     <h3>CS2</h3>
                     <p>Source Engine</p>
                 </div>
 
                 <div class="game-card">
-                    <div class="game-emoji">🦀</div>
                     <h3>Rust</h3>
                     <p>RakNet / EAC</p>
                 </div>
@@ -285,8 +294,7 @@
             <div class="footer-grid">
                 <div class="footer-brand">
                     <a href="#" class="logo">
-                        <span class="logo-icon">🛡️</span>
-                        <span class="logo-text">Aegis.net</span>
+                        <span class="logo-text">AEGIS.NET</span>
                     </a>
                     <p>Современная защита от DDoS для всех.</p>
                 </div>

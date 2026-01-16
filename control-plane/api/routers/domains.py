@@ -39,9 +39,9 @@ async def create_domain(domain_data: DomainCreate):
     domain = DomainResponse(
         id=str(uuid.uuid4()),
         domain=domain_data.domain,
-        origin_ip=domain_data.origin_ip,
-        origin_port=domain_data.origin_port,
-        config=DomainConfig(),
+        origin_ip=domain_data.origin,
+        origin_port=80, # Default port since not provided in CLI
+        config=DomainConfig(domain=domain_data.domain, origin=domain_data.origin),
         status="active",
         created_at=now,
         updated_at=now

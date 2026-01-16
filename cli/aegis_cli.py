@@ -11,9 +11,9 @@ from rich import box
 from typing import Optional
 import sys
 
-from config import ensure_config_dirs, settings
-from auth import auth_manager
-from api_client import ControlPlaneClient
+from .config import ensure_config_dirs, settings
+from .auth import auth_manager
+from .api_client import ControlPlaneClient
 
 console = Console()
 
@@ -32,7 +32,22 @@ pass_context = click.make_pass_decorator(CLIContext, ensure=True)
 @click.version_option(version="1.0.0", prog_name="aegis-cli")
 def cli():
     """Aegis CLI - Secure management for DDoS protection"""
+    """Aegis CLI - Secure management for DDoS protection"""
     ensure_config_dirs()
+    
+    # Try to restore session
+    ctx = click.get_current_context().obj
+    if auth_manager._host and auth_manager._current_token:
+        # Initialize client with stored connection info
+        try:
+            ctx.client = ControlPlaneClient(
+                host=auth_manager._host, 
+                port=auth_manager._port or 8000
+            )
+            ctx.connected = True
+        except Exception:
+            # Failed to restore connection
+            pass
 
 
 @cli.command()
@@ -58,6 +73,9 @@ def connect(ctx: CLIContext, host: str, port: int, ssl: bool):
         
         # Prompt for TOTP
         totp_token = auth_manager.prompt_totp()
+        
+        # Set connection info
+        auth_manager.set_connection_info(host, port)
         
         # Create client and authenticate
         ctx.client = ControlPlaneClient(host, port, ssl)
@@ -134,8 +152,8 @@ def domain_add(ctx: CLIContext, domain_name: str, origin: str, protection: int):
     try:
         with console.status(f"[cyan]Adding domain {domain_name}...[/cyan]"):
             response = ctx.client.post("domains", {
-                "name": domain_name,
-                "origin_url": origin,
+                "domain": domain_name,
+                "origin": origin,
                 "protection_level": protection
             })
         

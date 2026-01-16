@@ -2,6 +2,7 @@
 Authentication Module - SSH Keys + TOTP 2FA
 """
 import pyotp
+import json
 import qrcode
 import jwt
 from pathlib import Path
@@ -24,7 +25,12 @@ class AuthManager:
         self.ssh_key_path = settings.SSH_KEY_PATH
         self.totp_secret_path = settings.TOTP_SECRET_PATH
         self._totp = None
+        self._totp = None
         self._current_token = None
+        self._host = None
+        self._port = None
+        
+        self.load_session()
     
     def setup_ssh_keys(self) -> Path:
         """Generate SSH key pair if not exists"""
@@ -133,6 +139,14 @@ class AuthManager:
         """Create and store session token from Control Plane response"""
         # Store token received from Control Plane
         self._current_token = control_plane_response.get("access_token")
+        
+        # Save session to file
+        self.save_session({
+            "token": self._current_token,
+            "user": control_plane_response.get("user"),
+            "expires_in": control_plane_response.get("expires_in")
+        })
+        
         return self._current_token
     
     def get_session_token(self) -> Optional[str]:
@@ -142,7 +156,42 @@ class AuthManager:
     def clear_session(self):
         """Clear current session"""
         self._current_token = None
+        self._host = None
+        self._port = None
+        
+        if settings.SESSION_FILE_PATH.exists():
+            settings.SESSION_FILE_PATH.unlink()
+            
         console.print("[yellow]Session cleared[/yellow]")
+
+    def save_session(self, data: dict):
+        """Save session data to file"""
+        if self._host:
+            data["host"] = self._host
+        if self._port:
+            data["port"] = self._port
+            
+        settings.SESSION_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        settings.SESSION_FILE_PATH.write_text(json.dumps(data))
+        
+    def load_session(self):
+        """Load session from file"""
+        if not settings.SESSION_FILE_PATH.exists():
+            return
+            
+        try:
+            data = json.loads(settings.SESSION_FILE_PATH.read_text())
+            self._current_token = data.get("token")
+            self._host = data.get("host")
+            self._port = data.get("port")
+        except Exception:
+            # Invalid session file
+            pass
+
+    def set_connection_info(self, host: str, port: int):
+        """Set connection info for session"""
+        self._host = host
+        self._port = port
     
     def prompt_totp(self) -> str:
         """Prompt user for TOTP code"""

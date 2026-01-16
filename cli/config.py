@@ -17,6 +17,7 @@ class CLISettings(BaseSettings):
     # Security settings
     SSH_KEY_PATH: Path = Path.home() / ".ssh" / "aegis_cli"
     TOTP_SECRET_PATH: Path = Path.home() / ".aegis" / "totp_secret"
+    SESSION_FILE_PATH: Path = Path.home() / ".aegis" / "session.json"
     
     # API settings
     API_BASE_PATH: str = "/api/v1"

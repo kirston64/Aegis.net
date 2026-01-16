@@ -37,10 +37,10 @@ async def create_domain(domain_data: DomainCreate):
     
     now = datetime.utcnow()
     domain = DomainResponse(
-        id=str(uuid.uuid4()),
+        id=int(now.timestamp()),
         domain=domain_data.domain,
-        origin_ip=domain_data.origin,
-        origin_port=80, # Default port since not provided in CLI
+        origin=domain_data.origin,
+        protection_level=domain_data.protection_level,
         config=DomainConfig(domain=domain_data.domain, origin=domain_data.origin),
         status="active",
         created_at=now,
@@ -48,6 +48,19 @@ async def create_domain(domain_data: DomainCreate):
     )
     
     domains_db[domain_data.domain] = domain
+    
+    # Configure Nginx
+    try:
+        from api.services.nginx_manager import NginxManager
+        NginxManager.create_config(
+            domain=domain_data.domain,
+            origin_ip=domain_data.origin,
+            origin_port=80
+        )
+        NginxManager.reload_nginx()
+    except Exception as e:
+        # Log error using print for MVP since logger might not be configured everywhere
+        print(f"Error configuring Nginx: {e}")
     
     return domain
 

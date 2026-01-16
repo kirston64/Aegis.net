@@ -165,6 +165,26 @@ def domain_add(ctx: CLIContext, domain_name: str, origin: str, protection: int):
         console.print(f"[red]✗ Failed to add domain: {e}[/red]")
 
 
+@domain.command("delete")
+@click.argument("domain_name")
+@pass_context
+def domain_delete(ctx: CLIContext, domain_name: str):
+    """Delete a domain"""
+    _ensure_connected(ctx)
+    
+    try:
+        if not click.confirm(f"Are you sure you want to delete {domain_name}?"):
+            return
+            
+        with console.status(f"[cyan]Deleting domain {domain_name}...[/cyan]"):
+            ctx.client.delete(f"domains/{domain_name}")
+        
+        console.print(f"[green]✓ Domain {domain_name} deleted successfully[/green]")
+        
+    except Exception as e:
+        console.print(f"[red]✗ Failed to delete domain: {e}[/red]")
+
+
 @cli.group()
 def ratelimit():
     """Manage rate limiting"""

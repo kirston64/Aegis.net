@@ -1,0 +1,126 @@
+version: '3.8'
+
+services:
+  control-plane:
+    build:
+      context: ./control-plane
+      dockerfile: Dockerfile
+    container_name: aegis-control-plane
+    ports:
+      - "8000:8000"
+    environment:
+      - AUTHORIZED_CLI_KEYS=${AUTHORIZED_CLI_KEYS}
+      - WHITELISTED_IPS=${WHITELISTED_IPS}
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-change-in-production}
+      - CLI_SESSION_TIMEOUT=${CLI_SESSION_TIMEOUT:-3600}
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key}
+    volumes:
+      - ./control-plane:/app
+      - /app/__pycache__
+      - nginx-configs:/etc/nginx/conf.d/sites
+    networks:
+      - aegis-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  nginx-edge:
+    build:
+      context: ./nginx-edge
+      dockerfile: Dockerfile
+    container_name: aegis-nginx-edge
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - nginx-configs:/etc/nginx/conf.d/sites:ro
+      - nginx-logs:/var/log/nginx
+    networks:
+      - aegis-network
+    depends_on:
+      - control-plane
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost/health" ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  # Monitoring Stack
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: aegis-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - aegis-network
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: aegis-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+    networks:
+      - aegis-network
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: aegis-nginx-exporter
+    ports:
+      - "9113:9113"
+    command:
+      - '-nginx.scrape-uri=http://nginx-edge/nginx_status'
+    networks:
+      - aegis-network
+    depends_on:
+      - nginx-edge
+    restart: unless-stopped
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: aegis-node-exporter
+    ports:
+      - "9100:9100"
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks:
+      - aegis-network
+    restart: unless-stopped
+
+networks:
+  aegis-network:
+    driver: bridge
+
+volumes:
+  nginx-configs:
+  nginx-logs:
+  prometheus-data:
+  grafana-data:

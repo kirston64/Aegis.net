@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  control-plane:
+    build:
+      context: ./control-plane
+      dockerfile: Dockerfile
+    container_name: aegis-control-plane-prod
+    ports:
+      - "8000:8000"
+    environment:
+      - AUTHORIZED_CLI_KEYS=${AUTHORIZED_CLI_KEYS}
+      - WHITELISTED_IPS=${WHITELISTED_IPS}
+      - JWT_SECRET=${JWT_SECRET}
+      - CLI_SESSION_TIMEOUT=${CLI_SESSION_TIMEOUT:-3600}
+      - SECRET_KEY=${SECRET_KEY}
+      - EDGE_NODES=${EDGE_NODES}
+    volumes:
+      - nginx-configs:/etc/nginx/conf.d/sites
+    networks:
+      - aegis-network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  nginx-edge:
+    build:
+      context: ./nginx-edge
+      dockerfile: Dockerfile
+    container_name: aegis-nginx-edge-prod
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - nginx-configs:/etc/nginx/conf.d/sites:ro
+      - nginx-logs:/var/log/nginx
+      - ./ssl:/etc/nginx/ssl:ro
+    networks:
+      - aegis-network
+    depends_on:
+      control-plane:
+        condition: service_healthy
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '1.0'
+          memory: 512M
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost/health" ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+networks:
+  aegis-network:
+    driver: bridge
+
+volumes:
+  nginx-configs:
+  nginx-logs:

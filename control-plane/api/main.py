@@ -5,6 +5,7 @@ Aegis.net Control Plane — Main Application
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+from prometheus_fastapi_instrumentator import Instrumentator
 import structlog
 import redis
 
@@ -87,6 +88,9 @@ app.include_router(attack_mode.router, prefix="/api/v1/attack-mode", tags=["Atta
 app.include_router(ratelimit.router, prefix="/api/v1/ratelimit", tags=["Rate Limiting"])
 app.include_router(audit.router, prefix="/api/v1/audit", tags=["Audit"])
 
+# Prometheus metrics
+Instrumentator().instrument(app).expose(app)
+
 
 @app.get("/")
 async def root():
@@ -97,5 +101,3 @@ async def root():
         "docs": "/docs",
         "status": "operational"
     }
-
-

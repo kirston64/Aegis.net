@@ -59,8 +59,16 @@ async def create_domain(domain_data: DomainCreate):
         )
         NginxManager.reload_nginx()
     except Exception as e:
-        # Log error using print for MVP since logger might not be configured everywhere
+        # Re-raise exception to alert the user/CLI
         print(f"Error configuring Nginx: {e}")
+        # Clean up database entry if config failed
+        if domain_data.domain in domains_db:
+            del domains_db[domain_data.domain]
+            
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to configure protection: {str(e)}"
+        )
     
     return domain
 

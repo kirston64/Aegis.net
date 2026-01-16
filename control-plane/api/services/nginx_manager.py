@@ -7,6 +7,11 @@ import structlog
 
 logger = structlog.get_logger()
 
+# Docker-compatible configuration
+IS_DOCKER = os.getenv("DOCKER_ENV", "false").lower() == "true"
+NGINX_CONFIG_DIR = os.getenv("NGINX_CONFIG_DIR", "/etc/nginx/conf.d/sites" if IS_DOCKER else "/etc/nginx/sites-available")
+NGINX_CONTAINER_NAME = os.getenv("NGINX_CONTAINER_NAME", "aegis-nginx-edge")
+
 class NginxManager:
     """Manages Nginx configuration and process."""
 
@@ -16,6 +21,9 @@ server {{
     server_name {domain};
 
     location / {{
+        # Aegis Protection Rules
+        limit_req zone=aegis_limit burst=20 nodelay;
+        
         proxy_pass http://{origin_ip}:{origin_port};
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -36,19 +44,17 @@ server {{
             origin_port=origin_port
         )
 
-        config_path = f"/etc/nginx/sites-available/{domain}"
-        symlink_path = f"/etc/nginx/sites-enabled/{domain}"
+        config_path = f"{NGINX_CONFIG_DIR}/{domain}.conf"
 
         try:
+            # Ensure config directory exists
+            os.makedirs(NGINX_CONFIG_DIR, exist_ok=True)
+            
             # Write config file
             with open(config_path, "w") as f:
                 f.write(config_content)
-            
-            # Create symlink if not exists
-            if not os.path.exists(symlink_path):
-                os.symlink(config_path, symlink_path)
                 
-            logger.info("nginx_config_created", domain=domain)
+            logger.info("nginx_config_created", domain=domain, path=config_path)
             return True
         except Exception as e:
             logger.error("nginx_config_creation_failed", error=str(e))
@@ -58,8 +64,17 @@ server {{
     def reload_nginx():
         """Reload Nginx service."""
         try:
-            subprocess.run(["systemctl", "reload", "nginx"], check=True)
-            logger.info("nginx_reloaded")
+            if IS_DOCKER:
+                # In Docker, send reload signal to nginx container
+                subprocess.run(
+                    ["docker", "exec", NGINX_CONTAINER_NAME, "nginx", "-s", "reload"],
+                    check=True
+                )
+            else:
+                # On bare metal, use systemctl
+                subprocess.run(["/usr/bin/sudo", "/usr/bin/systemctl", "reload", "nginx"], check=True)
+            
+            logger.info("nginx_reloaded", docker=IS_DOCKER)
         except subprocess.CalledProcessError as e:
-            logger.error("nginx_reload_failed", error=str(e))
+            logger.error("nginx_reload_failed", error=str(e), docker=IS_DOCKER)
             raise

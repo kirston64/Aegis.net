@@ -26,18 +26,22 @@ RUN apt-get update && apt-get install -y \
     libpq5 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy Python dependencies from builder
-COPY --from=builder /root/.local /root/.local
+# Create non-root user first
+RUN useradd -m -u 1000 aegis
+
+# Copy Python dependencies from builder to aegis user home
+COPY --from=builder /root/.local /home/aegis/.local
 
 # Copy application code
 COPY . .
 
-# Create non-root user
-RUN useradd -m -u 1000 aegis && chown -R aegis:aegis /app
+# Fix ownership
+RUN chown -R aegis:aegis /app /home/aegis/.local
+
 USER aegis
 
-# Add .local/bin to PATH
-ENV PATH=/root/.local/bin:$PATH
+# Add .local/bin to PATH for aegis user
+ENV PATH=/home/aegis/.local/bin:$PATH
 
 # Expose port
 EXPOSE 8000
